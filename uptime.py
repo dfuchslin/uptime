@@ -33,17 +33,20 @@ def get_url_stats(config):
       c.setopt(c.HTTPHEADER, [ k+': '+v for k,v in config['headers'].items() ])
 
     stats = {}
-    stats["timedout"] = 0
-    stats["error"] = 0
+    stats["status.success"] = 1
+    stats["status.timedout"] = 0
+    stats["status.error"] = 0
 
     try:
         c.perform()
     except Exception as e:
         if e.args[0] == c.E_OPERATION_TIMEDOUT:
-            stats["timedout"] = 1
+            stats["status.timedout"] = 1
+            stats["status.success"] = 0
         else:
             print(e)
-            stats["error"] = 1
+            stats["status.error"] = 1
+            stats["status.success"] = 0
 
     # deprecate these
     stats["namelookuptime"] = c.getinfo(c.NAMELOOKUP_TIME)
@@ -127,8 +130,10 @@ def send_stats(stats, config):
     send_single_status(build_message("time.total.reported", "f", graphite_path, stats), config)
     send_single_status(build_message("time.total.diff", "f", graphite_path, stats), config)
 
-    send_single_status(build_message("timedout", "d", graphite_path, stats), config)
-    send_single_status(build_message("error", "d", graphite_path, stats), config)
+    send_single_status(build_message("status.success", "d", graphite_path, stats), config)
+    send_single_status(build_message("status.timedout", "d", graphite_path, stats), config)
+    send_single_status(build_message("status.error", "d", graphite_path, stats), config)
+
     send_single_status(build_message("responsecode", "d", graphite_path, stats), config)
     send_single_status(build_message("downloadbytes", "f", graphite_path, stats), config)
 
