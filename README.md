@@ -13,7 +13,7 @@ pip3 install -U pycurl
 
 The following options can be set with environment variables:
 
-| Variable | Description | Default |
+| environment variable | description | default |
 |----------|-------------|---------|
 | GRAPHITE_HOST | Hostname of graphite server | graphite |
 | GRAPHITE_PORT | Port of graphite server| 2003 |
