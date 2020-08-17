@@ -76,7 +76,7 @@ def build_graphite_friendly_url(url):
   return url.replace("https://", "").replace("http://", "").replace("/", "_").replace("?", "_").replace("&", "_").replace(".", "_")
 
 def send_stats(stats, config):
-    graphite_path = "{}.{}".format(config['graphite_base_path'], build_graphite_friendly_url(stats["url"]))
+    graphite_path = "{}.{}".format(config['graphite_metric_prefix'], build_graphite_friendly_url(stats["url"]))
 
     send_single_status(build_message("responsetime", "f", graphite_path, stats), config)
     send_single_status(build_message("responsecode", "d", graphite_path, stats), config)
@@ -98,13 +98,13 @@ def send_single_status(msg, config):
     sock.close()
 
 def main(argv):
-    if len(argv) < 3:
-        print("python ./uptime.py [url] [graphite-base-path]")
+    if len(argv) < 2:
+        print("python ./uptime.py [url]")
         sys.exit(2)
 
     config = {}
     config['url'] = argv[1]
-    config['graphite_base_path'] = argv[2]
+    config['graphite_metric_prefix'] = get_env_var("GRAPHITE_METRIC_PREFIX", "uptime")
     config['graphite_host'] = get_env_var("GRAPHITE_HOST", "graphite")
     config['graphite_port'] = int(get_env_var("GRAPHITE_PORT", "2003"))
     config['timeout'] = int(get_env_var("TIMEOUT", "30"))
