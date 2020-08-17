@@ -31,8 +31,13 @@ def main(argv):
 
     reporter = CurlTimeReporter(config)
 
+    # threadify this!
     while(True):
-        reporter.analyze_url('https://gyttja.com', '/')
-        time.sleep(5)
+        for check in config['checks']:
+          host = check['host']
+          path = check['path']
+          interval = int(check['interval'])
+          reporter.analyze_url(host, path)
+          time.sleep(interval)
 
 main(sys.argv)

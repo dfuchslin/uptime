@@ -1,7 +1,7 @@
 # configuration sample
 
 graphite:
-  host: graphite
+  host: graphite.local
   port: 2003
   prefix: test.uptime
 timeout: 30
