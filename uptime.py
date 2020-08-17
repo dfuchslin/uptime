@@ -17,18 +17,9 @@ def get_env_var(name, default):
 
 def get_url_stats(config):
     url = config['url']
-    ip = config['ip']
     timestamp = int(time.time())
     buffer = BytesIO()
     c = pycurl.Curl()
-    if len(ip) > 0:
-        o = urlparse(url)
-        resolve_to = o.netloc + ":443:" + ip
-        print("resolving to: [" + resolve_to + "]")
-        print("RUNNING INSECURE TLS NEGOTIATION")
-        c.setopt(pycurl.RESOLVE, [ resolve_to ])
-        c.setopt(pycurl.SSL_VERIFYPEER, 0)
-        c.setopt(pycurl.SSL_VERIFYHOST, 0)
     c.setopt(pycurl.USERAGENT, config['user_agent'])
     c.setopt(c.TIMEOUT, config['timeout'])
     c.setopt(c.URL, url)
@@ -59,11 +50,7 @@ def get_url_stats(config):
     stats["redirecttime"] = c.getinfo(c.REDIRECT_TIME)
     stats["downloadbytes"] = c.getinfo(c.SIZE_DOWNLOAD)
     stats["timestamp"] = timestamp
-    if len(ip) > 0:
-      o = urlparse(url)
-      stats["url"] = url.replace(o.netloc, o.netloc + "-" + ip)
-    else:
-      stats["url"] = url
+    stats["url"] = url
 
     c.close()
 
