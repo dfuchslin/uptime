@@ -3,7 +3,9 @@
 import sys, os
 import time
 import logging
+import yaml
 from lib.reporter import CurlTimeReporter
+
 
 def get_env_var(name, default):
     if name in os.environ:
@@ -34,7 +36,7 @@ def main(argv):
     reporter = CurlTimeReporter(config)
 
     while(True):
-        reporter.send_stats(reporter.get_url_stats())
+        reporter.analyze_url(config['url'])
         time.sleep(config['check_interval'])
 
 main(sys.argv)

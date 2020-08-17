@@ -19,8 +19,7 @@ class CurlTimeReporter:
             return 0
         return current - running_response_time
 
-    def get_url_stats(self):
-        url = self.config['url']
+    def get_url_stats(self, url):
         timestamp = int(time.time())
         buffer = BytesIO()
         c = pycurl.Curl()
@@ -46,15 +45,6 @@ class CurlTimeReporter:
                 logging.error(e)
                 stats["status.error"] = 1
                 stats["status.success"] = 0
-
-        # deprecate these
-        stats["namelookuptime"] = c.getinfo(c.NAMELOOKUP_TIME)
-        stats["connecttime"] = c.getinfo(c.CONNECT_TIME)
-        stats["appconnecttime"] = c.getinfo(c.APPCONNECT_TIME)
-        stats["pretransfertime"] = c.getinfo(c.PRETRANSFER_TIME)
-        stats["starttransfertime"] = c.getinfo(c.STARTTRANSFER_TIME)
-        stats["responsetime"] = c.getinfo(c.TOTAL_TIME)
-        stats["redirecttime"] = c.getinfo(c.REDIRECT_TIME)
 
         # calculate diffs
         running_response_time = 0.0
@@ -112,15 +102,6 @@ class CurlTimeReporter:
     def send_stats(self, stats):
         graphite_path = "{}.{}".format(self.config['graphite_metric_prefix'], self.build_graphite_friendly_url(stats["url"]))
 
-        # deprecate these
-        self.send_single_status(self.build_message("namelookuptime", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("connecttime", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("appconnecttime", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("pretransfertime", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("starttransfertime", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("redirecttime", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("responsetime", "f", graphite_path, stats))
-
         self.send_single_status(self.build_message("time.namelookup.reported", "f", graphite_path, stats))
         self.send_single_status(self.build_message("time.namelookup.diff", "f", graphite_path, stats))
         self.send_single_status(self.build_message("time.connect.reported", "f", graphite_path, stats))
@@ -142,3 +123,6 @@ class CurlTimeReporter:
 
         self.send_single_status(self.build_message("responsecode", "d", graphite_path, stats))
         self.send_single_status(self.build_message("downloadbytes", "f", graphite_path, stats))
+
+    def analyze_url(self, url):
+        self.send_stats(self.get_url_stats(url))
