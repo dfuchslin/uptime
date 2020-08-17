@@ -24,7 +24,7 @@ def main(argv):
     config_file = argv[1]
     with open(config_file) as file:
       logging.info('Loading configuration from %s' % config_file)
-      config = yaml.load(file, Loader=yaml.FullLoader)
+      config = yaml.load(file, Loader=yaml.SafeLoader)
 
     reporter = CurlTimeReporter(config)
 
