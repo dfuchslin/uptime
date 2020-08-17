@@ -1,0 +1,17 @@
+# configuration sample
+
+graphite:
+  host: graphite
+  port: 2003
+  prefix: test.uptime
+timeout: 30
+user_agent: "libcurl (custom uptime check)"
+headers:
+  accept-encoding: gzip, deflate
+checks:
+  - host: https://bahnhof.se
+    path: /
+    interval: 5
+  - host: https://gyttja.com
+    path: /
+    interval: 5

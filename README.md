@@ -26,19 +26,19 @@ The following options can be set with environment variables:
 Sample configuration:
 
 ```
-          graphite:
-            host: 192.168.101.10
-            port: 2003
-            prefix: uptime
-          timeout: 30
-          user_agent: gathering_response_time_data_to_show_my_isp_bahnhof_how_inconsistent_and_slow_my_connection_can_be
-          checks:
-            - host: https://bahnhof.se
-              path: /
-              interval: 5
-            - host: https://gyttja.com
-              path: /
-              interval: 5
+graphite:
+  host: 192.168.101.10
+  port: 2003
+  prefix: uptime
+timeout: 30
+user_agent: "libcurl (custom uptime check)"
+checks:
+  - host: https://bahnhof.se
+    path: /
+    interval: 5
+  - host: https://gyttja.com
+    path: /
+    interval: 5
 ```
 
 ## graphite

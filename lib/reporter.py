@@ -12,23 +12,53 @@ except ImportError:
 class CurlTimeReporter:
 
     def __init__(self, config):
-        self.config = config
+        self.graphite_host = 'graphite'
+        self.graphite_port = 2003
+        self.graphite_prefix = 'uptime'
+        graphite = config.get('graphite')
+        if graphite:
+          if graphite.get('host'):
+            self.graphite_host = graphite['host']
+          if graphite.get('port'):
+            self.graphite_port = int(graphite['port'])
+          if graphite.get('prefix'):
+            self.graphite_prefix = graphite['prefix']
+
+        self.user_agent = self.set_or_default(config, 'user_agent', 'libcurl (custom uptime check)')
+        self.timeout = int(self.set_or_default(config, 'timeout', 30))
+        self.headers = self.set_or_default(config, 'headers', {})
+
+
+        logging.info('Configured reporter:')
+        logging.info('  Graphite:')
+        logging.info('    host     : %s' % self.graphite_host)
+        logging.info('    port     : %d' % self.graphite_port)
+        logging.info('    prefix   : %s' % self.graphite_prefix)
+        logging.info('  user_agent : %s' % self.user_agent)
+        logging.info('  timeout    : %d' % self.timeout)
+        logging.info('  headers    : %s' % self.headers)
+
+    def set_or_default(self, config, key, default):
+      if config.get(key):
+        return config[key]
+      return default
 
     def calc_diff(self, current, running_response_time):
         if current - running_response_time < 0.0:
             return 0
         return current - running_response_time
 
-    def get_url_stats(self, url):
+    def get_url_stats(self, host, path):
         timestamp = int(time.time())
+        url = f'{host}{path}'
         buffer = BytesIO()
         c = pycurl.Curl()
-        c.setopt(pycurl.USERAGENT, self.config['user_agent'])
-        c.setopt(c.TIMEOUT, self.config['timeout'])
+        c.setopt(pycurl.USERAGENT, self.user_agent)
+        c.setopt(c.TIMEOUT, self.timeout)
         c.setopt(c.URL, url)
         c.setopt(c.WRITEDATA, buffer)
-        if len(self.config['headers']) > 0:
-          c.setopt(c.HTTPHEADER, [ k+': '+v for k,v in self.config['headers'].items() ])
+        if len(self.headers) > 0:
+          c.setopt(c.HTTPHEADER, [ k+': '+v for k,v in self.headers.items() ])
 
         stats = {}
         stats["status.success"] = 1
@@ -80,7 +110,8 @@ class CurlTimeReporter:
         stats["responsecode"] = c.getinfo(c.RESPONSE_CODE)
         stats["downloadbytes"] = c.getinfo(c.SIZE_DOWNLOAD)
         stats["timestamp"] = timestamp
-        stats["url"] = url
+        stats["host"] = host
+        stats["path"] = path
 
         c.close()
 
@@ -89,18 +120,20 @@ class CurlTimeReporter:
     def build_message(self, stat, datatype, graphite_path, stats):
         return (("{}.{} {:" + datatype + "} {:d}\n").format(graphite_path, stat, stats[stat], stats["timestamp"]))
 
-    def build_graphite_friendly_url(self, url):
-        return url.replace("https://", "").replace("http://", "").replace("/", "_").replace("?", "_").replace("&", "_").replace(".", "_")
+    def build_graphite_friendly_url(self, host, path):
+        host_cleaned = host.replace("https://", "").replace("http://", "").replace("/", "_").replace("?", "_").replace("&", "_").replace(".", "_")
+        path_cleaned = path.replace("/", "_").replace("?", "_").replace("&", "_").replace(".", "_")
+        return f'{host_cleaned}.{path_cleaned}'
 
     def send_single_status(self, msg):
         logging.info('sending message to graphite: %s' % msg.replace('\n', ''))
         sock = socket.socket()
-        sock.connect((self.config['graphite_host'], self.config['graphite_port']))
+        sock.connect((self.graphite_host, self.graphite_port))
         sock.sendall(msg.encode())
         sock.close()
 
     def send_stats(self, stats):
-        graphite_path = "{}.{}".format(self.config['graphite_metric_prefix'], self.build_graphite_friendly_url(stats["url"]))
+        graphite_path = "{}.{}".format(self.graphite_prefix, self.build_graphite_friendly_url(stats['host'], stats['path']))
 
         self.send_single_status(self.build_message("time.namelookup.reported", "f", graphite_path, stats))
         self.send_single_status(self.build_message("time.namelookup.diff", "f", graphite_path, stats))
@@ -124,5 +157,5 @@ class CurlTimeReporter:
         self.send_single_status(self.build_message("responsecode", "d", graphite_path, stats))
         self.send_single_status(self.build_message("downloadbytes", "f", graphite_path, stats))
 
-    def analyze_url(self, url):
-        self.send_stats(self.get_url_stats(url))
+    def analyze_url(self, host, path):
+        self.send_stats(self.get_url_stats(host, path))
