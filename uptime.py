@@ -2,6 +2,7 @@
 
 import sys, os
 import time
+import logging
 from lib.reporter import CurlTimeReporter
 
 def get_env_var(name, default):
@@ -11,8 +12,11 @@ def get_env_var(name, default):
 
 def main(argv):
     if len(argv) < 2:
-        print("python ./uptime.py [url]")
+        logging.error("python ./uptime.py [url]")
         sys.exit(2)
+
+    format = "%(asctime)s: %(message)s"
+    logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
 
     config = {}
     config['url'] = argv[1]

@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 import sys, getopt, os
 import socket
 import time
+import logging
 try:
     from io import BytesIO
 except ImportError:
@@ -42,7 +43,7 @@ class CurlTimeReporter:
                 stats["status.timedout"] = 1
                 stats["status.success"] = 0
             else:
-                print(e)
+                logging.error(e)
                 stats["status.error"] = 1
                 stats["status.success"] = 0
 
@@ -102,7 +103,7 @@ class CurlTimeReporter:
         return url.replace("https://", "").replace("http://", "").replace("/", "_").replace("?", "_").replace("&", "_").replace(".", "_")
 
     def send_single_status(self, msg):
-        print('sending message to graphite: %s' % msg.replace('\n', ''), flush=True)
+        logging.info('sending message to graphite: %s' % msg.replace('\n', ''))
         sock = socket.socket()
         sock.connect((self.config['graphite_host'], self.config['graphite_port']))
         sock.sendall(msg.encode())
