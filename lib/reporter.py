@@ -28,7 +28,6 @@ class CurlTimeReporter:
         self.timeout = int(self.set_or_default(config, 'timeout', 30))
         self.headers = self.set_or_default(config, 'headers', {})
 
-
         logging.info('Configured reporter:')
         logging.info('  Graphite:')
         logging.info('    host     : %s' % self.graphite_host)

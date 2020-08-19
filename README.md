@@ -3,7 +3,7 @@
 Script to periodically check a specific website for response times
 
 ```
-pip3 install -U pycurl
+pip3 install -U pycurl apscheduler
 ```
 
 

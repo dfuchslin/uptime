@@ -4,7 +4,13 @@ import sys, os
 import time
 import logging
 import yaml
+import math
 from lib.reporter import CurlTimeReporter
+
+from pytz import utc
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 
 
 def get_env_var(name, default):
@@ -28,13 +34,31 @@ def main(argv):
 
     reporter = CurlTimeReporter(config)
 
-    # threadify this!
+    max_simultaneous_threads = 0
+    for check in config['checks']:
+        interval = int(check['interval'])
+        max_simultaneous_threads += math.ceil(reporter.timeout / interval)
+    logging.info("Configure scheduler for %d threads" % max_simultaneous_threads)
+
+    executors = {
+        'default': ThreadPoolExecutor(max_simultaneous_threads + 1),
+        'processpool': ProcessPoolExecutor(max_simultaneous_threads)
+    }
+    job_defaults = {
+        'coalesce': False,
+        'max_instances': max_simultaneous_threads
+    }
+    scheduler = BackgroundScheduler(executors=executors, job_defaults=job_defaults, timezone=utc)
+
+    for check in config['checks']:
+        host = check['host']
+        path = check['path']
+        interval = int(check['interval'])
+        scheduler.add_job(reporter.analyze_url, 'interval', kwargs={'host':host, 'path':path}, seconds=interval)
+
+    scheduler.start()
+
     while(True):
-        for check in config['checks']:
-          host = check['host']
-          path = check['path']
-          interval = int(check['interval'])
-          reporter.analyze_url(host, path)
-          time.sleep(interval)
+        time.sleep(1)
 
 main(sys.argv)
