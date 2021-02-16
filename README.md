@@ -1,6 +1,6 @@
 # uptime
 
-Script to periodically check a specific website for response times
+Script to periodically check a specific website for response times. Inspired by a project at work, I needed something similar at home! Unfortunately our work projet was not opensource, so I had to re-create this codebase. Now I want some of the same features at work, so I need to rewrite the work codebase to include these features I have on my home codebase!
 
 ```
 pip3 install -U pycurl pyyaml apscheduler
