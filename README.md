@@ -8,7 +8,7 @@ pip3 install -U pycurl pyyaml apscheduler
 
 
 ```
-./uptime.py https://gyttja.com uptime
+./uptime.py /path/to/config.yaml
 ```
 
 The following options can be set with environment variables:

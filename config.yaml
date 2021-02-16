@@ -1,17 +1,19 @@
 # configuration sample
 
 graphite:
-  host: graphite.local
+  host: 192.168.1.62
   port: 2003
-  prefix: test.uptime
+  prefix: uptime.esp8266
 timeout: 30
-user_agent: "libcurl (custom uptime check)"
-headers:
-  accept-encoding: gzip, deflate
+user_agent: uptime
 checks:
-  - host: https://bahnhof.se
-    path: /
+  - host: http://temperature-relay.local
+    path: /health
     interval: 5
-  - host: https://gyttja.com
-    path: /
-    interval: 5
+#  - host: http://shutter-control.local
+#    path: /health
+#    interval: 5
+#  - host: http://neopixel-control.local
+#    path: /health
+#    interval: 5
+

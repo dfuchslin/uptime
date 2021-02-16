@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+
+  graphite:
+    container_name: graphite
+    image: graphiteapp/graphite-statsd:latest
+    ports:
+      #- '8080:8080'
+      - '2003-2004:2003-2004'
+    volumes:
+      - './.graphite/conf:/opt/graphite/conf'
+      - './.graphite/storage:/opt/graphite/storage'
+    restart: unless-stopped

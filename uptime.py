@@ -20,7 +20,7 @@ def get_env_var(name, default):
 
 def main(argv):
     if len(argv) < 2:
-        logging.error("python ./uptime.py [url]")
+        logging.error("python ./uptime.py [path-to-config]")
         sys.exit(2)
 
     format = "%(asctime)s: %(message)s"
