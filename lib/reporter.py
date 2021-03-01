@@ -126,7 +126,7 @@ class CurlTimeReporter:
 
     def send_multi_stats(self, msgs):
         msg = ''.join(msgs)
-        logging.info('sending message to graphite: %s' % msg.replace('\n', '|'))
+        logging.debug('sending message to graphite: %s' % msg.replace('\n', '|'))
         conn = socket.create_connection((self.graphite_host, self.graphite_port), timeout=self.timeout)
         conn.sendall(msg.encode('ascii'))
         conn.close()

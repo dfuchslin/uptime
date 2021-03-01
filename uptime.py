@@ -49,6 +49,7 @@ def main(argv):
         'max_instances': max_simultaneous_threads
     }
     scheduler = BackgroundScheduler(executors=executors, job_defaults=job_defaults, timezone=utc)
+    logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 
     for check in config['checks']:
         host = check['host']
