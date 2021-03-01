@@ -124,37 +124,41 @@ class CurlTimeReporter:
         path_cleaned = path.replace("/", "_").replace("?", "_").replace("&", "_").replace(".", "_")
         return f'{host_cleaned}.{path_cleaned}'
 
-    def send_single_status(self, msg):
-        logging.info('sending message to graphite: %s' % msg.replace('\n', ''))
-        sock = socket.socket()
-        sock.connect((self.graphite_host, self.graphite_port))
-        sock.sendall(msg.encode())
-        sock.close()
+    def send_multi_stats(self, msgs):
+        msg = ''.join(msgs)
+        logging.info('sending message to graphite: %s' % msg.replace('\n', '|'))
+        conn = socket.create_connection((self.graphite_host, self.graphite_port), timeout=self.timeout)
+        conn.sendall(msg.encode('ascii'))
+        conn.close()
 
     def send_stats(self, stats):
         graphite_path = "{}.{}".format(self.graphite_prefix, self.build_graphite_friendly_url(stats['host'], stats['path']))
 
-        self.send_single_status(self.build_message("time.namelookup.reported", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.namelookup.diff", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.connect.reported", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.connect.diff", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.appconnect.reported", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.appconnect.diff", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.pretransfer.reported", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.pretransfer.diff", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.starttransfer.reported", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.starttransfer.diff", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.redirect.reported", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.redirect.diff", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.total.reported", "f", graphite_path, stats))
-        self.send_single_status(self.build_message("time.total.diff", "f", graphite_path, stats))
+        msgs = []
 
-        self.send_single_status(self.build_message("status.success", "d", graphite_path, stats))
-        self.send_single_status(self.build_message("status.timedout", "d", graphite_path, stats))
-        self.send_single_status(self.build_message("status.error", "d", graphite_path, stats))
+        msgs.append(self.build_message("time.namelookup.reported", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.namelookup.diff", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.connect.reported", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.connect.diff", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.appconnect.reported", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.appconnect.diff", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.pretransfer.reported", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.pretransfer.diff", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.starttransfer.reported", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.starttransfer.diff", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.redirect.reported", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.redirect.diff", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.total.reported", "f", graphite_path, stats))
+        msgs.append(self.build_message("time.total.diff", "f", graphite_path, stats))
 
-        self.send_single_status(self.build_message("responsecode", "d", graphite_path, stats))
-        self.send_single_status(self.build_message("downloadbytes", "f", graphite_path, stats))
+        msgs.append(self.build_message("status.success", "d", graphite_path, stats))
+        msgs.append(self.build_message("status.timedout", "d", graphite_path, stats))
+        msgs.append(self.build_message("status.error", "d", graphite_path, stats))
+
+        msgs.append(self.build_message("responsecode", "d", graphite_path, stats))
+        msgs.append(self.build_message("downloadbytes", "f", graphite_path, stats))
+
+        self.send_multi_stats(msgs)
 
     def analyze_url(self, host, path):
         self.send_stats(self.get_url_stats(host, path))
